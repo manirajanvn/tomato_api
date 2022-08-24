@@ -1,1 +1,1 @@
-Sample app to deploy
+Image classification api to find tomato dieases
