@@ -22,14 +22,10 @@ classes = [
 def read_image(file: bytes) -> PILImage:
     img = Image.open(BytesIO(file))
     fastimg = PILImage.create(np.array(img.convert('RGB')))
-
     return fastimg
-
-def is_hotdog(x):
-    return "frankfurter" in x or "hotdog" in x or "chili-dog" in x
 
 def predict_disease(image) -> Dict:
     path = Path()
-    inference_model = load_learner(path/'model.pkl')
+    inference_model = load_learner(path/'tomato_disease_1.pkl')
     prediction = inference_model.predict(image)
     return classes[prediction[0]]
