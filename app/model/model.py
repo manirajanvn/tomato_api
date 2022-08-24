@@ -1,17 +1,10 @@
-import pickle
+from typing import Dict
+from io import BytesIO
 import numpy as np
 from PIL import Image
-from pathlib import Path
-import torchvision.transforms as transforms
+from fastai.vision.all import *
 
 __version__ = "1"
-
-BASE_DIR = Path(__file__).resolve(strict=True).parent
-
-
-with open(f"{BASE_DIR}/tomato_disease_1.pkl", "rb") as f:
-    model = pickle.load(f)
-
 
 classes = [
     "Bacterial spot",
@@ -26,32 +19,17 @@ classes = [
     "healthy"
 ]
 
+def read_image(file: bytes) -> PILImage:
+    img = Image.open(BytesIO(file))
+    fastimg = PILImage.create(np.array(img.convert('RGB')))
 
-def predict_pipeline(image_file):
-    image_bytes = image_file.file.read()
-    class_id,class_name = get_prediction(image_bytes)
-    result = {
-        "predictions":{
-            "class_id":class_id,
-            "class_name":class_name
-        }
-    }
-    return result
+    return fastimg
 
-def transform_image(image_bytes):
-    my_transforms = transforms.Compose([transforms.Resize(255),
-                                        transforms.CenterCrop(224),
-                                        transforms.ToTensor(),
-                                        transforms.Normalize(
-                                            [0.485, 0.456, 0.406],
-                                            [0.229, 0.224, 0.225])])
-    image = Image.open(io.BytesIO(image_bytes))
-    return my_transforms(image).unsqueeze(0)
+def is_hotdog(x):
+    return "frankfurter" in x or "hotdog" in x or "chili-dog" in x
 
-
-def get_prediction(image_bytes):
-    tensor = transform_image(image_bytes=image_bytes)
-    outputs = model.forward(tensor)
-    _, y_hat = outputs.max(1)
-    predicted_idx = str(y_hat.item())
-    return classes[predicted_idx]
+def predict_disease(image) -> Dict:
+    path = Path()
+    inference_model = load_learner(path/'model.pkl')
+    prediction = inference_model.predict(image)
+    return classes[prediction[0]]
